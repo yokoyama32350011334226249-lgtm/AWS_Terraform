@@ -1,0 +1,5 @@
+aws_region   = "ap-northeast-1"
+bucket_name  = "terraform-bucket-20251107"
+environment  = "dev"
+object_key       = "testfile.txt"
+local_file_path  = "./testfile.txt"
