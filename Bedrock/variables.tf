@@ -37,3 +37,10 @@ variable "lambda_role_name" {
   description = "IAM role name for Lambda"
   type        = string
 }
+
+# ===== セキュリティ設定 =====
+# S3バケットへのアクセスを許可するIPアドレスレンジ（CIDR表記）
+variable "allowed_ip" {
+  description = "Allowed IP address range for S3 bucket access (CIDR notation)"
+  type        = string
+}

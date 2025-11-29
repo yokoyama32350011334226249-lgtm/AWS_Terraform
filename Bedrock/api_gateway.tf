@@ -12,6 +12,14 @@ resource "aws_apigatewayv2_api" "api" {
   name          = var.api_name
   # HTTP API を使用（REST API の一種、シンプルで低コスト）
   protocol_type = "HTTP"
+  cors_configuration {
+    allow_origins = ["https://my-bedrock-static-site.s3.ap-northeast-1.amazonaws.com"] # 許可するオリジン（* にすると全許可）
+    allow_methods = ["GET", "POST", "OPTIONS"]                         # 許可するメソッド（必ず OPTIONS を含める）
+    allow_headers = ["Content-Type", "Authorization", "X-Api-Key"]     # 許可するリクエストヘッダ
+    expose_headers = ["x-custom-header"]                              # 必要に応じて公開するレスポンスヘッダ
+    max_age        = 3600                                              # ブラウザがプリフライト結果をキャッシュする秒数
+    allow_credentials = false                                          # クッキー等を許可する場合は true に
+  }
 }
 
 # ===== Lambda 統合（API → Lambda の接続） =====
@@ -23,6 +31,8 @@ resource "aws_apigatewayv2_integration" "lambda_integration" {
   api_id = aws_apigatewayv2_api.api.id
   # AWS_PROXY：Lambda が HTTP ステータスコードなど全てを返す
   integration_type = "AWS_PROXY"
+  # HTTP メソッド：POST リクエストを Lambda に転送
+  integration_method = "POST"
   # Lambda 関数の ARN（どの関数にリクエストを転送するか）
   integration_uri = aws_lambda_function.bedrock_lambda.arn
   # API Gateway v2 フォーマット
@@ -40,6 +50,30 @@ resource "aws_apigatewayv2_route" "route" {
   # リクエスト転送先：Lambda 統合
   target = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
 }
+
+# # ===== MOCK 統合（プリフライトリクエスト用） =====
+# # 目的: API Gateway が受け取ったリクエストを MOCK 統合に転送するための橋渡し
+# resource "aws_apigatewayv2_integration" "mock_integration" {
+#   api_id = aws_apigatewayv2_api.api.id
+#   # AWS_PROXY：Lambda が HTTP ステータスコードなど全てを返す
+#   integration_type = "MOCK"
+#   # HTTP メソッド：OPTIONS リクエストを MOCK に転送
+#   integration_method = "OPTIONS"
+#   # API Gateway v2 フォーマット
+#   payload_format_version = "2.0"
+# }
+
+# # ===== ルート（エンドポイント設定） =====
+# # 目的: 特定の HTTP メソッド・パスのリクエストを MOCK 統合に転送するルール
+# # 例: OPTIONS https://api-endpoint.com/bedrock → MOCK 統合に転送
+# resource "aws_apigatewayv2_route" "options_route" {
+#   api_id = aws_apigatewayv2_api.api.id
+#   # ルートキー：HTTP メソッド + パス
+#   # OPTIONS /bedrock にマッチするリクエストを処理
+#   route_key = "OPTIONS /bedrock"
+#   # リクエスト転送先：Lambda 統合
+#   target = "integrations/${aws_apigatewayv2_integration.mock_integration.id}"
+# }
 
 # ===== ステージ（デプロイメント環境） =====
 # 目的: API を実際にインターネットに公開するための環境設定

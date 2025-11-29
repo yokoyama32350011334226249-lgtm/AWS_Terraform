@@ -107,4 +107,12 @@ resource "aws_lambda_function" "bedrock_lambda" {
   runtime = "python3.11"
   # デプロイするコードの ZIP ファイル
   filename = data.archive_file.lambda_zip.output_path
+  # コードの変更検出用ハッシュ値
+  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+  # 環境変数の設定
+  environment {
+    variables = {
+      BEDROCK_MODEL_ID = "amazon.titan-text-lite-v1"  # ← 申請不要モデル
+    }
+  }
 }

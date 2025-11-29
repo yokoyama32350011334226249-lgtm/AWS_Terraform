@@ -45,7 +45,7 @@
 <script>
 // ======= API Gateway のエンドポイントを設定 ========
 // Terraform apply 後に表示される endpoint を貼り付けてください。
-const API_ENDPOINT = "https://YOUR_API_ID.execute-api.YOUR_REGION.amazonaws.com/bedrock";
+const API_ENDPOINT = "${api_endpoint}/bedrock";
 
 async function sendText() {
     const input = document.getElementById("query").value;

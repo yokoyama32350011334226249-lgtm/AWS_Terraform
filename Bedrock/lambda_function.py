@@ -1,12 +1,12 @@
 """
 ===== Lambda 関数：Bedrock AI モデルへのリクエスト処理 =====
 このスクリプトは API Gateway からのリクエストを受け取り、
-Amazon Bedrock の Claude AI モデルに問い合わせを行い、結果をクライアントに返します。
+Amazon Bedrock の titan モデルに問い合わせを行い、結果をクライアントに返します。
 
 処理フロー:
   1. API Gateway から JSON リクエストを受信
   2. リクエストボディからユーザーの入力テキストを抽出
-  3. Bedrock の Claude モデルに入力を送信
+  3. Bedrock の titan モデルに入力を送信
   4. AI が生成した応答を JSON 形式で返却
 """
 
@@ -43,7 +43,28 @@ def handler(event, context):
     # ===== ユーザー入力テキストの抽出 =====
     # 目的: リクエストから AI に送信するテキストを取得
     # デフォルト: "こんにちは" - 入力がない場合の初期値
-    user_input = body.get("text", "こんにちは")
+    user_input = body.get("text", "入力がありません")
+
+    print("User input:", user_input)
+
+    if not user_input:
+        return {
+            "statusCode": 400,
+            "body": json.dumps({"error": "query is required"}),
+            "headers": {
+                "Access-Control-Allow-Origin": "*"
+                }
+        }
+
+    # ===== Bedrock モデル用ペイロードの構築 =====
+    payload = {
+        "inputText": user_input,
+        "textGenerationConfig": {
+            "maxTokenCount": 512,
+            "temperature": 0.7,
+            "topP": 0.9
+        }
+    }
 
     # ===== Bedrock モデル呼び出し =====
     # 目的: Claude AI モデルにユーザーのリクエストを送信して応答を取得
@@ -52,23 +73,31 @@ def handler(event, context):
     #   2. messages でユーザーのメッセージを Claude に送信
     #   3. max_tokens で応答の最大トークン数を制限
     response = client.invoke_model(
-        # 使用する AI モデル：Claude 3 Haiku（高速・低コスト）
-        modelId="anthropic.claude-3-haiku-20240307-v1:0",
-        # リクエストボディ：メッセージ形式で AI に送信
-        body=json.dumps({
-            # メッセージ配列：ユーザーの入力を user ロールで送信
-            "messages": [{"role": "user", "content": user_input}],
-            # 生成テキストの最大トークン数（長さの制限）
-            "max_tokens": 500
-        })
+        # 使用する AI モデル： amazon.titan-text-express-v1
+        modelId="amazon.titan-text-express-v1",
+        # リクエストヘッダー：JSON 形式を指定
+        contentType="application/json",
+        # レスポンスヘッダー：JSON 形式を期待
+        accept="application/json",
+        # リクエストボディ：JSON 文字列としてペイロードを渡す
+        body=json.dumps(payload)
     )
 
-    # ===== Bedrock からのレスポンス処理 =====
-    # 目的: Bedrock が返したバイナリデータを文字列に変換
-    # 処理:
-    #   1. response["body"].read() でストリームから全データ読み込み
-    #   2. .decode() でバイト列を UTF-8 文字列に変換
-    output = response["body"].read().decode()
+    print("Bedrock response:", response)
+
+    # ===== Bedrock モデルの応答解析 =====
+    # 目的: Bedrock からの応答をパースして生成されたテキストを抽出
+    body_bytes = response["body"].read() # バイト列として応答ボディを取得
+    body_str = body_bytes.decode("utf-8") # バイト列を文字列に変換
+    result = json.loads(body_str)         # 文字列を JSON ディクショナリに変換
+    output_text = ""
+    results = result.get("results", [])
+    if results and isinstance(results, list):
+        output_text = results[0].get("outputText", "")
+
+    print("文字列変換後：",body_str)
+    print("Parsed result:", result)
+    print("Output text:", output_text)
 
     # ===== HTTP レスポンスの組み立て =====
     # 目的: クライアントに HTTP 形式のレスポンスを返す
@@ -76,8 +105,10 @@ def handler(event, context):
     return {
         # ステータスコード：200 は正常処理完了
         "statusCode": 200,
-        # HTTP ヘッダー：JSON 形式であることを示す
-        "headers": {"Content-Type": "application/json"},
+        # HTTP ヘッダー： CORS 設定を含む
+        "headers": {
+            "Access-Control-Allow-Origin": "*",  # 必要なら制限可
+        },
         # レスポンスボディ：AI の応答を JSON で返す
-        "body": json.dumps({"response": output})
+        "body": json.dumps({"response": output_text})
     }
