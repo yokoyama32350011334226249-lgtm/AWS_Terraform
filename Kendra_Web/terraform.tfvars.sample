@@ -1,0 +1,5 @@
+# --- 変数値の例（利用時は terraform.tfvars にリネーム） ---
+
+aws_region                   = "ap-northeast-1"                      # 利用するリージョン
+kendra_index_name            = "my-kendra-index"                    # Kendraインデックス名
+seed_url                     = "https://example.com"                # クロール開始URL
