@@ -30,6 +30,18 @@ resource "aws_iam_role_policy" "kendra_index_policy" {
     Version = "2012-10-17",
     Statement = [
       {
+        "Effect": "Allow",
+        "Action": [
+          "cloudwatch:PutMetricData"
+        ],
+        "Resource": "*",
+        "Condition": {
+          "StringEquals": {
+           "cloudwatch:namespace": "AWS/Kendra"
+          }
+        }
+      },
+      {
         Effect = "Allow",
         Action = [
           "logs:CreateLogGroup",
@@ -48,6 +60,61 @@ resource "aws_kendra_index" "this" {
   name        = var.kendra_index_name
   role_arn    = aws_iam_role.kendra_index_role.arn   # 作成した IAM ロールを指定
   edition     = "DEVELOPER_EDITION"
+
+# --- Kendra が自動付与するメタデータ設定 ---
+  # 抜粋が元の PDF の何ページ目かを示す
+  document_metadata_configuration_updates {
+    name = "_excerpt_page_number"
+    type = "LONG_VALUE"
+    search {
+      facetable = false # ページ番号での絞り込みは通常行わない
+      searchable = false # 検索語としては利用しない
+      displayable = true # 検索結果にページ番号を表示
+      sortable = false # ページ番号でのソートは行わない
+    }
+  }
+  # # Kendra が内部的に算出する検索信頼度スコア
+  # document_metadata_configuration_updates {
+  #   name = "_confidence_score"
+  #   type = "LONG_VALUE"
+  #   search {
+  #     facetable = false # UI ファセットには出さない
+  #     searchable = false
+  #     displayable = true # 管理・デバッグ用途で表示
+  #     sortable = true # 信頼度順での並び替えを可能にする
+  #   }
+  #   relevance {
+  #     importance = 1 # 検索順位への影響は最小限
+  #   }
+  # }
+  # Kendra による自動カテゴリ分類
+  document_metadata_configuration_updates {
+    name = "_category"
+    type = "STRING_VALUE"
+    search {
+      facetable = true # カテゴリで絞り込み可能
+      searchable = false
+      displayable = true # 検索結果にカテゴリを表示
+      sortable = true # カテゴリ順での並び替えを可能にする
+    }
+    relevance {
+      importance = 2 # 検索順位に軽く影響させる
+    }
+  }
+  # クロール元の URL（PDF や HTML の実体）
+  document_metadata_configuration_updates {
+    name = "_source_uri"
+    type = "STRING_VALUE"
+    search {
+      facetable = false # URL での絞り込みは通常行わない
+      searchable = false # URL 自体を検索語対象にしない
+      displayable = true # 検索結果にリンクとして表示
+      sortable = false # URL 順ソートは不要
+    }
+    relevance {
+      importance = 1 # 検索順位への影響は最小限
+    }
+  }
 }
 
 
@@ -105,12 +172,13 @@ resource "aws_kendra_data_source" "webcrawler" {
   name     = "kendra-webcrawler"       # データソース名
   type     = "WEBCRAWLER"              # Webcrawler を指定
   role_arn = aws_iam_role.kendra_datasource_role.arn  # Webcrawler 用の IAM ロール
+  language_code = "ja"                # 日本語コンテンツをクロール
 
   configuration {
     web_crawler_configuration {
       urls {
         seed_url_configuration {
-          web_crawler_mode = "HOST_ONLY"   # ホストのみクロール
+          web_crawler_mode = "EVERYTHING"   # ホストのみクロール
           seed_urls = [var.seed_url]   # クロール開始 URL（tfvars から外出し）
         }
       }
