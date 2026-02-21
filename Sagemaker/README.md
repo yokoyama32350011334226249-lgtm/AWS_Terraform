@@ -182,12 +182,12 @@ terraform output notebook_instance_url
 
 1. S3 に保存されたモデルの実際のパスを確認：
 ```
-s3://sagemaker-20260207/nikkei-deepar/output/<model-artifact-folder>/model.tar.gz
+s3://<バケット名>/nikkei-deepar/output/<model-artifact-folder>/model.tar.gz
 ```
 
 2. `sagemaker.tf` の `model_data_url` を更新：
 ```hcl
-model_data_url = "s3://sagemaker-20260207/nikkei-deepar/output/<model-artifact-folder>/model.tar.gz"
+model_data_url = "s3://<バケット名>/nikkei-deepar/output/<model-artifact-folder>/model.tar.gz"
 ```
 
 3. Terraform でモデルとエンドポイントをデプロイ：
@@ -203,9 +203,9 @@ terraform apply
 ## 注意事項
 
 ### S3 バケット・パスの確認
-- `s3_bucket = "sagemaker-20260207"`
-- `training_data_uri = "s3://sagemaker-20260207/nikkei-deepar/train"`
-- `output_path = "s3://sagemaker-20260207/nikkei-deepar/output"`
+- `s3_bucket = "<バケット名>"`
+- `training_data_uri = "s3://<バケット名>/nikkei-deepar/train"`
+- `output_path = "s3://<バケット名>/nikkei-deepar/output"`
 
 環境に合わせて、**sagemaker.tf 内のバケット名を調整してください**。
 

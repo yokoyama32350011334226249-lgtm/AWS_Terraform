@@ -10,9 +10,9 @@ locals {
     Environment = "production"
     ManagedBy   = "Terraform"
   }
-  s3_bucket         = "sagemaker-20260207"
-  training_data_uri = "s3://${local.s3_bucket}/nikkei-deepar/train"
-  output_path       = "s3://${local.s3_bucket}/nikkei-deepar/output"
+  # s3_bucket         = "sagemaker-<リージョン名>-<アカウントID>"  # S3バケット名の例
+  training_data_uri = "s3://${var.s3_bucket}/nikkei-deepar/train"
+  output_path       = "s3://${var.s3_bucket}/nikkei-deepar/output"
 }
 
 # ===== SageMaker 実行用 IAM ロール =====
@@ -113,15 +113,20 @@ resource "aws_sagemaker_notebook_instance" "deepar_notebook" {
 # 注: Notebook インスタンスで学習完了後、以下を実行してください：
 # 1. model_data_url を実際の S3 パスに更新
 # 2. terraform apply を実行
+# 組み込みアルゴリズムのイメージ URI を動的に取得
+data "aws_sagemaker_prebuilt_ecr_image" "deepar" {
+  repository_name = "forecasting-deepar"
+  image_tag       = "latest"
+}
+
+# 2. resource ブロックを書き換え
 resource "aws_sagemaker_model" "deepar_model" {
   name               = "${local.project_name}-model"
   execution_role_arn = aws_iam_role.sagemaker_role.arn
 
   primary_container {
-    image = "246618743249.dkr.ecr.ap-northeast-1.amazonaws.com/sagemaker-forecasting-deepar:1"
-    # Notebook で学習完了後、以下を実際の S3 パスに置き換え：
-    # s3://sagemaker-20260207/nikkei-deepar/output/<model-artifact-folder>/model.tar.gz
-    model_data_url = "${local.output_path}/model-artifacts-placeholder/model.tar.gz"
+    image          = data.aws_sagemaker_prebuilt_ecr_image.deepar.registry_path
+    model_data_url = "${local.output_path}/forecasting-deepar-2026-01-10-02-08-21-129/output/model.tar.gz"
   }
 
   tags = local.common_tags
