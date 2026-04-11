@@ -13,7 +13,7 @@ resource "aws_apigatewayv2_api" "api" {
   # HTTP API を使用（REST API の一種、シンプルで低コスト）
   protocol_type = "HTTP"
   cors_configuration {
-    allow_origins = ["https://my-bedrock-static-site.s3.ap-northeast-1.amazonaws.com"] # 許可するオリジン（* にすると全許可）
+    allow_origins = ["https://${aws_s3_bucket.static_site.bucket_domain_name}"] # 許可するオリジン（S3静的サイトのURLを指定）
     allow_methods = ["GET", "POST", "OPTIONS"]                         # 許可するメソッド（必ず OPTIONS を含める）
     allow_headers = ["Content-Type", "Authorization", "X-Api-Key"]     # 許可するリクエストヘッダ
     expose_headers = ["x-custom-header"]                              # 必要に応じて公開するレスポンスヘッダ

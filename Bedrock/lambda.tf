@@ -88,9 +88,9 @@ data "archive_file" "lambda_zip" {
   # 圧縮形式
   type = "zip"
   # 圧縮対象：Lambda関数のPythonスクリプト
-  source_file = "${path.module}/lambda_function.py"
+  source_file = var.filepath_lambda_py
   # 圧縮後の出力先
-  output_path = "${path.module}/lambda_function.zip"
+  output_path = var.filepath_lambda_zip
 }
 
 # ===== Lambda 関数（Bedrock AI モデル呼び出し用） =====

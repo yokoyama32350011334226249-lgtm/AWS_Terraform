@@ -16,10 +16,25 @@ variable "s3_bucket_name" {
   type        = string
 }
 
+variable "filepath_index_html" {
+  description = "File path to the index.html file for the static website"
+  type        = string
+}
+
 # ===== Lambda 関数設定 =====
 # Bedrock APIを呼び出すLambda関数の名前
 variable "lambda_function_name" {
   description = "Lambda function name"
+  type        = string
+}
+
+variable "filepath_lambda_py" {
+  description = "File path to the Lambda deployment package (Python file)"
+  type        = string
+}
+
+variable "filepath_lambda_zip" {
+  description = "File path to the Lambda deployment package (ZIP file)"
   type        = string
 }
 
