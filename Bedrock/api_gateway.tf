@@ -63,9 +63,9 @@ resource "aws_apigatewayv2_route" "route" {
 #   payload_format_version = "2.0"
 # }
 
-# # ===== ルート（エンドポイント設定） =====
-# # 目的: 特定の HTTP メソッド・パスのリクエストを MOCK 統合に転送するルール
-# # 例: OPTIONS https://api-endpoint.com/bedrock → MOCK 統合に転送
+# ===== ルート（エンドポイント設定） =====
+# 目的: 特定の HTTP メソッド・パスのリクエストを MOCK 統合に転送するルール
+# 例: OPTIONS https://api-endpoint.com/bedrock → MOCK 統合に転送
 # resource "aws_apigatewayv2_route" "options_route" {
 #   api_id = aws_apigatewayv2_api.api.id
 #   # ルートキー：HTTP メソッド + パス
@@ -74,6 +74,14 @@ resource "aws_apigatewayv2_route" "route" {
 #   # リクエスト転送先：Lambda 統合
 #   target = "integrations/${aws_apigatewayv2_integration.mock_integration.id}"
 # }
+
+# ===== ルート（エンドポイント設定） =====
+# 目的: OPTIONS /bedrock へのリクエストを Lambda に転送
+resource "aws_apigatewayv2_route" "options_route" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "OPTIONS /bedrock"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
+}
 
 # ===== ステージ（デプロイメント環境） =====
 # 目的: API を実際にインターネットに公開するための環境設定

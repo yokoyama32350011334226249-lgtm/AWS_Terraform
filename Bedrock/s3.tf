@@ -106,7 +106,7 @@ resource "aws_s3_object" "index_html" {
   # バケット内でのオブジェクトのキー（パス）
   key = "index.html"
   # templatefile で API URL を埋め込む
-  content = templatefile(var.filepath_index_html, {
+  content = templatefile("${var.filepath_index_html}", {
     api_endpoint = aws_apigatewayv2_api.api.api_endpoint
   })
   # ファイルの MIME タイプ（HTML ファイルとして認識）
