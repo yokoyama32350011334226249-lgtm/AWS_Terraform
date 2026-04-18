@@ -19,7 +19,7 @@ import boto3
 client = boto3.client("bedrock-runtime")
 
 
-def handler(event, context):
+def lambda_handler(event, context):
     """
     Lambda ハンドラー関数：API Gateway からのリクエストを処理
     

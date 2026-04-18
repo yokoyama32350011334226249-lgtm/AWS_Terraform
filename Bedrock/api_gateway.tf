@@ -77,11 +77,11 @@ resource "aws_apigatewayv2_route" "route" {
 
 # ===== ルート（エンドポイント設定） =====
 # 目的: OPTIONS /bedrock へのリクエストを Lambda に転送
-resource "aws_apigatewayv2_route" "options_route" {
-  api_id    = aws_apigatewayv2_api.api.id
-  route_key = "OPTIONS /bedrock"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
-}
+# resource "aws_apigatewayv2_route" "options_route" {
+#   api_id    = aws_apigatewayv2_api.api.id
+#   route_key = "OPTIONS /bedrock"
+#   target    = "integrations/${aws_apigatewayv2_integration.lambda_integration.id}"
+# }
 
 # ===== ステージ（デプロイメント環境） =====
 # 目的: API を実際にインターネットに公開するための環境設定

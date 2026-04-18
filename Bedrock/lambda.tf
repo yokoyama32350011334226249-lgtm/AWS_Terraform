@@ -102,13 +102,15 @@ resource "aws_lambda_function" "bedrock_lambda" {
   # この関数に付与する IAM ロール（上記で定義）
   role = aws_iam_role.lambda_role.arn
   # 関数呼び出しのエントリーポイント（ファイル名.関数名）
-  handler = "lambda_function.handler"
+  handler = "lambda_function.lambda_handler"
   # Python ランタイムバージョン
-  runtime = "python3.11"
+  runtime = "python3.13"
   # デプロイするコードの ZIP ファイル
   filename = data.archive_file.lambda_zip.output_path
   # コードの変更検出用ハッシュ値
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+  # タイムアウト時間の設定（秒単位、デフォルトは3秒、最大900秒）
+  timeout = 30  # タイムアウト時間（秒）
   # 環境変数の設定
   environment {
     variables = {

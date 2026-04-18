@@ -3,8 +3,7 @@ import boto3
 
 def lambda_handler(event, context):
     client = boto3.client(
-        service_name='bedrock-runtime',
-        region_name='ap-northeast-1'
+        service_name='bedrock-runtime'
     )
 
     request_body = {
@@ -20,7 +19,7 @@ def lambda_handler(event, context):
     }
 
     response = client.invoke_model(
-        modelId="anthropic.claude-sonnet-4-6",
+        modelId="global.anthropic.claude-sonnet-4-6",
         body=json.dumps(request_body),
         contentType="application/json",
         accept="application/json"
