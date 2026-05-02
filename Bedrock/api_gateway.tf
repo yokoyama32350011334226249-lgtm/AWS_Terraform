@@ -13,7 +13,10 @@ resource "aws_apigatewayv2_api" "api" {
   # HTTP API を使用（REST API の一種、シンプルで低コスト）
   protocol_type = "HTTP"
   cors_configuration {
-    allow_origins = ["https://${aws_s3_bucket.static_site.bucket_domain_name}"] # 許可するオリジン（S3静的サイトのURLを指定）
+    allow_origins = [
+      "https://${aws_s3_bucket.static_site.bucket}.s3.${var.region}.amazonaws.com", # 許可するオリジン（S3静的サイトのURLを指定）
+      "http://${aws_s3_bucket_website_configuration.website.website_endpoint}"
+    ]
     allow_methods = ["GET", "POST", "OPTIONS"]                         # 許可するメソッド（必ず OPTIONS を含める）
     allow_headers = ["Content-Type", "Authorization", "X-Api-Key"]     # 許可するリクエストヘッダ
     expose_headers = ["x-custom-header"]                              # 必要に応じて公開するレスポンスヘッダ

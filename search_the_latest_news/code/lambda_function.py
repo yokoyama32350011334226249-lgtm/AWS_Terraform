@@ -31,13 +31,20 @@ def lambda_handler(event, context):
     if isinstance(body, str):
         body = json.loads(body)
 
-    prompt = body.get("prompt")
-    if not prompt:
-        return {
-            "statusCode": 400,
-            "headers": CORS_HEADERS,
-            "body": json.dumps({"error": "prompt is required"}, ensure_ascii=False)
-        }
+    messages = body.get("messages", [])
+
+    # contentが文字列の場合、Bedrock形式に変換する
+    bedrock_messages = []
+    for msg in messages:
+        content = msg.get("content", "")
+        if isinstance(content, str):
+            bedrock_messages.append({
+                "role": msg["role"],
+                "content": [{"type": "text", "text": content}]
+            })
+        else:
+            # すでに配列形式ならそのまま使う
+            bedrock_messages.append(msg)
 
     # ④ Bedrockの呼び出し
     client = boto3.client(service_name='bedrock-runtime')
@@ -46,13 +53,21 @@ def lambda_handler(event, context):
         "anthropic_version": "bedrock-2023-05-31",
         "max_tokens": 1024,
         "system": "あなたは親切なアシスタントです。日本語で回答してください。",
-        "messages": [
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
+        # "tools": [
+        #     {
+        #         "type": "web_search_20250305",  # ← Anthropic定義のツール名
+        #         "name": "web_search"
+        #     }
+        # ],
+        "messages": bedrock_messages  # 変換後のメッセージを渡す
     }
+
+    if not messages:
+        return {
+            "statusCode": 400,
+            "headers": CORS_HEADERS,
+            "body": json.dumps({"error": "messages is required"}, ensure_ascii=False)
+        }
 
     response = client.invoke_model(
         modelId="global.anthropic.claude-sonnet-4-6",
