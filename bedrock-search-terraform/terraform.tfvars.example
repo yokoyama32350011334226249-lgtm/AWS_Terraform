@@ -1,0 +1,14 @@
+# terraform.tfvars.example
+# このファイルをコピーして terraform.tfvars にリネームし、実際の値を入力してください
+# terraform.tfvars は .gitignore に追加して機密情報をコミットしないようにしてください
+
+aws_region       = "ap-northeast-1"
+project_name     = "bedrock-search"
+bedrock_model_id = "global.anthropic.claude-sonnet-4-6"
+
+# Google Custom Search API
+# https://console.cloud.google.com/ でAPIキーを取得
+google_api_key = "YOUR_GOOGLE_API_KEY"
+
+# https://programmablesearchengine.google.com/ で検索エンジンIDを取得
+google_cx = "YOUR_GOOGLE_SEARCH_ENGINE_ID"

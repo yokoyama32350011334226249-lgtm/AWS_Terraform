@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bedrock Web Search</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:#0a0a0f; --surface:#12121a; --surface2:#1c1c28;
+      --border:#2a2a3d; --accent:#7c6aff; --accent2:#ff6a9e;
+      --text:#e8e8f0; --muted:#6b6b88; --radius:14px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(124,106,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(124,106,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+    header{position:relative;z-index:10;padding:18px 28px;border-bottom:1px solid var(--border);background:rgba(10,10,15,.85);backdrop-filter:blur(12px);display:flex;align-items:center;gap:14px}
+    .logo-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#fff}
+    .header-text h1{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .header-text p{font-size:11px;color:var(--muted);margin-top:1px}
+    .status-badge{margin-left:auto;padding:4px 10px;border-radius:20px;background:rgba(124,106,255,.12);border:1px solid rgba(124,106,255,.3);font-size:11px;color:var(--accent);display:flex;align-items:center;gap:6px}
+    .status-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;animation:pulse 2s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    main{position:relative;z-index:1;flex:1;max-width:860px;width:100%;margin:0 auto;padding:40px 28px;display:flex;flex-direction:column;gap:28px}
+    .input-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+    .input-card h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px}
+    .input-card p{font-size:12px;color:var(--muted);margin-bottom:18px}
+    .input-row{display:flex;gap:10px}
+    #topic-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s}
+    #topic-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,106,255,.12)}
+    #topic-input::placeholder{color:var(--muted)}
+    #search-btn{padding:0 24px;height:46px;border-radius:var(--radius);background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;font-size:13px;color:#fff;white-space:nowrap;transition:opacity .2s,transform .1s}
+    #search-btn:hover{opacity:.85}
+    #search-btn:active{transform:scale(.97)}
+    #search-btn:disabled{opacity:.4;cursor:not-allowed}
+    .hint-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .hint-chip{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);font-size:11px;color:var(--muted);cursor:pointer;transition:all .2s}
+    .hint-chip:hover{border-color:var(--accent);color:var(--accent);background:rgba(124,106,255,.08)}
+    .result-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;animation:fadeIn .4s forwards}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .result-section{padding:20px 24px;border-bottom:1px solid var(--border)}
+    .result-section:last-child{border-bottom:none}
+    .section-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+    .query-text{font-size:14px;color:var(--accent);font-family:'Syne',sans-serif;font-weight:600}
+    .summary-text{font-size:13px;line-height:1.85;white-space:pre-wrap}
+    .results-list{display:flex;flex-direction:column;gap:12px}
+    .result-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+    .result-item a{font-size:13px;font-weight:500;color:var(--accent);text-decoration:none}
+    .result-item a:hover{text-decoration:underline}
+    .result-item .snippet{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.65}
+    .result-item .url{font-size:10px;color:var(--muted);margin-top:4px;word-break:break-all}
+    .loading{display:flex;flex-direction:column;align-items:center;gap:16px;padding:48px 0;color:var(--muted);font-size:13px}
+    .spinner{width:36px;height:36px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--accent);animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .step-list{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+    .step{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);opacity:.4;transition:opacity .4s}
+    .step.active{opacity:1;color:var(--text)}
+    .step.done{opacity:.7;color:var(--accent)}
+    .step-dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background .4s}
+    .step.active .step-dot{background:var(--accent2);box-shadow:0 0 6px var(--accent2)}
+    .step.done .step-dot{background:var(--accent)}
+    .error-card{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:var(--radius);padding:20px 24px;color:#f87171;font-size:13px;line-height:1.7}
+    @media(max-width:600px){main{padding:24px 16px}.input-row{flex-direction:column}#search-btn{width:100%}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo-mark">✦</div>
+  <div class="header-text">
+    <h1>Bedrock Web Search</h1>
+    <p>Amazon Bedrock · Claude Sonnet 4.6 · Google Custom Search</p>
+  </div>
+  <div class="status-badge"><span class="status-dot"></span>Ready</div>
+</header>
+<main>
+  <div class="input-card">
+    <h2>トピックを入力</h2>
+    <p>調査したいテーマを入力すると、Claudeが検索クエリを生成し、Google検索して結果を要約します。</p>
+    <div class="input-row">
+      <input type="text" id="topic-input" placeholder="例: 生成AIの最新トレンド 2025" />
+      <button id="search-btn" onclick="startSearch()">調査開始</button>
+    </div>
+    <div class="hint-chips">
+      <div class="hint-chip" onclick="useHint(this)">生成AIの最新動向</div>
+      <div class="hint-chip" onclick="useHint(this)">AWSのサーバーレスベストプラクティス</div>
+      <div class="hint-chip" onclick="useHint(this)">量子コンピュータの現状</div>
+    </div>
+  </div>
+  <div id="result-area"></div>
+</main>
+<script>
+  const API_ENDPOINT = "${api_endpoint}/bedrock";
+  function useHint(el){document.getElementById('topic-input').value=el.textContent;document.getElementById('topic-input').focus()}
+  document.getElementById('topic-input').addEventListener('keydown',(e)=>{if(e.key==='Enter')startSearch()});
+  function setStep(el,state){el.className='step '+state}
+  async function startSearch(){
+    const topic=document.getElementById('topic-input').value.trim();
+    if(!topic)return;
+    const btn=document.getElementById('search-btn');
+    const ra=document.getElementById('result-area');
+    btn.disabled=true;
+    ra.innerHTML=`<div class="loading"><div class="spinner"></div><div class="step-list"><div class="step active" id="s1"><span class="step-dot"></span>検索クエリを生成中...</div><div class="step" id="s2"><span class="step-dot"></span>Google検索を実行中...</div><div class="step" id="s3"><span class="step-dot"></span>結果を要約中...</div></div></div>`;
+    const s1=document.getElementById('s1'),s2=document.getElementById('s2'),s3=document.getElementById('s3');
+    const t1=setTimeout(()=>{setStep(s1,'done');setStep(s2,'active')},1800);
+    const t2=setTimeout(()=>{setStep(s2,'done');setStep(s3,'active')},4000);
+    try{
+      const res=await fetch(API_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic})});
+      clearTimeout(t1);clearTimeout(t2);
+      if(!res.ok){const e=await res.text();throw new Error(`HTTP ${res.status}: ${e}`)}
+      let data=await res.json();
+      if(typeof data.body==='string'){try{data=JSON.parse(data.body)}catch{}}
+      const summary=data.summary||'',sq=data.search_query||'',sr=data.search_results||[];
+      ra.innerHTML=`<div class="result-card">
+        <div class="result-section"><div class="section-label">生成された検索クエリ</div><div class="query-text">${esc(sq)}</div></div>
+        <div class="result-section"><div class="section-label">要約レポート</div><div class="summary-text">${esc(summary)}</div></div>
+        <div class="result-section"><div class="section-label">参照元 (${sr.length}件)</div><div class="results-list">${sr.map(r=>`<div class="result-item"><a href="${esc(r.link||'')}" target="_blank" rel="noopener">${esc(r.title||'')}</a><div class="snippet">${esc(r.snippet||'')}</div><div class="url">${esc(r.link||'')}</div></div>`).join('')}</div></div>
+      </div>`;
+    }catch(err){
+      clearTimeout(t1);clearTimeout(t2);
+      ra.innerHTML=`<div class="error-card">エラーが発生しました:<br>${esc(err.message)}</div>`;
+    }finally{btn.disabled=false}
+  }
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+# 機密情報
+terraform.tfvars
+*.tfvars
+!*.tfvars.example
+
+# Terraform ステート（リモートバックエンドを使う場合はローカル不要）
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+
+# Terraform キャッシュ
+.terraform/
+.terraform.lock.hcl
+
+# ビルド成果物
+.build/
