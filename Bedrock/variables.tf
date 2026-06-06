@@ -59,3 +59,16 @@ variable "allowed_ip" {
   description = "Allowed IP address range for S3 bucket access (CIDR notation)"
   type        = string
 }
+
+# ===== Google Custom Search API 設定 =====
+variable "google_api_key" {
+  description = "Google Custom Search API キー"
+  type        = string
+  sensitive   = true
+}
+
+variable "google_cse_id" {
+  description = "Google Custom Search Engine ID"
+  type        = string
+  sensitive   = true
+}
