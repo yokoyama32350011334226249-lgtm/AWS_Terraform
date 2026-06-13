@@ -3,7 +3,7 @@
 # terraform.tfvars は .gitignore に追加して機密情報をコミットしないようにしてください
 
 aws_region       = "ap-northeast-1"
-project_name     = "bedrock-search"
+project_name     = "bedrock-search
 bedrock_model_id = "global.anthropic.claude-sonnet-4-6"
 
 # Google Custom Search API

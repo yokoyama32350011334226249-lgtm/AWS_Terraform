@@ -60,15 +60,9 @@ variable "allowed_ip" {
   type        = string
 }
 
-# ===== Google Custom Search API 設定 =====
-variable "google_api_key" {
-  description = "Google Custom Search API キー"
-  type        = string
-  sensitive   = true
-}
-
-variable "google_cse_id" {
-  description = "Google Custom Search Engine ID"
+# ===== Brave Search API 設定 =====
+variable "brave_api_key" {
+  description = "Brave Search API キー"
   type        = string
   sensitive   = true
 }

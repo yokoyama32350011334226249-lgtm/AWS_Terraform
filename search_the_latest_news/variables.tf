@@ -3,14 +3,8 @@ variable "allowed_ip" {
   type        = string
 }
 
-variable "google_api_key" {
-  description = "Google Custom Search API キー"
-  type        = string
-  sensitive   = true
-}
-
-variable "google_cse_id" {
-  description = "Google Custom Search Engine ID"
+variable "brave_api_key" {
+  description = "Brave Search API キー"
   type        = string
   sensitive   = true
 }

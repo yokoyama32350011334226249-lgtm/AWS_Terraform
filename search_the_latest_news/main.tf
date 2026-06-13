@@ -8,6 +8,5 @@ module "bedrock_lambda_apigw_s3" {
   filepath_lambda_zip = "${path.module}/code/lambda_function.zip"
   lambda_function_name = "news-search-lambda"
   lambda_role_name = "news-search-lambda-role"
-  google_api_key = var.google_api_key
-  google_cse_id  = var.google_cse_id
+  brave_api_key = var.brave_api_key
 }

@@ -115,8 +115,7 @@ resource "aws_lambda_function" "bedrock_lambda" {
   environment {
     variables = {
       BEDROCK_MODEL_ID = "amazon.titan-text-lite-v1"  # ← 申請不要モデル
-      GOOGLE_API_KEY   = var.google_api_key
-      GOOGLE_CSE_ID    = var.google_cse_id
+      BRAVE_API_KEY    = var.brave_api_key
     }
   }
 }

@@ -10,16 +10,15 @@ CORS_HEADERS = {
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Api-Key"
 }
 
-# Google Custom Search API の設定（Lambda 環境変数から取得）
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
-GOOGLE_CSE_ID  = os.environ.get("GOOGLE_CSE_ID", "")
+# Brave Search API の設定（Lambda 環境変数から取得）
+BRAVE_API_KEY = os.environ.get("BRAVE_API_KEY", "")
 
-# Bedrock に登録する Google Custom Search ツールの定義
+# Bedrock に登録する Brave Search ツールの定義
 TOOLS = [
     {
-        "name": "google_custom_search",
+        "name": "brave_search",
         "description": (
-            "Google Custom Search API を使って最新情報をインターネット検索するツールです。"
+            "Brave Search API を使って最新情報をインターネット検索するツールです。"
             "リアルタイムのニュース、最新情報、または学習データに含まれない情報が必要な場合に使用します。"
         ),
         "input_schema": {
@@ -41,49 +40,50 @@ TOOLS = [
 ]
 
 
-def google_custom_search(query: str, num: int = 5) -> dict:
-    """Google Custom Search API を呼び出し、検索結果を返す"""
-    if not GOOGLE_API_KEY or not GOOGLE_CSE_ID:
-        return {"error": "GOOGLE_API_KEY または GOOGLE_CSE_ID が設定されていません"}
+def brave_search(query: str, num: int = 5) -> dict:
+    """Brave Search API を呼び出し、検索結果を返す"""
+    if not BRAVE_API_KEY:
+        return {"error": "BRAVE_API_KEY が設定されていません"}
 
-    num = max(1, min(10, num))  # 1〜10 の範囲に制限
+    num = max(1, min(20, num))  # 1〜20 の範囲に制限
     params = urllib.parse.urlencode({
-        "key": GOOGLE_API_KEY,
-        "cx": GOOGLE_CSE_ID,
         "q": query,
-        "num": num
-        # "lr": "lang_ja"   # 日本語結果を優先
+        "count": num
     })
-    url = f"https://www.googleapis.com/customsearch/v1?{params}"
+    url = f"https://api.search.brave.com/res/v1/web/search?{params}"
 
     try:
-        # req = urllib.request.Request(url, headers={"Accept": "application/json"})
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        req = urllib.request.Request(
+            url,
+            headers={
+                "Accept": "application/json",
+                "X-Subscription-Token": BRAVE_API_KEY
+            }
+        )
         with urllib.request.urlopen(req, timeout=10) as resp:
             data = json.loads(resp.read().decode("utf-8"))
 
-        items = data.get("items", [])
+        items = data.get("web", {}).get("results", [])
         results = [
             {
                 "title":   item.get("title", ""),
-                "link":    item.get("link", ""),
-                "snippet": item.get("snippet", "")
+                "link":    item.get("url", ""),
+                "snippet": item.get("description", "")
             }
             for item in items
         ]
-        return {"results": results, "total": data.get("searchInformation", {}).get("totalResults", "0")}
+        return {"results": results, "total": len(results)}
     except urllib.error.HTTPError as e:
-        # 💡 ここが肝心！Googleが怒っている本当の理由をログに出力します
         error_body = e.read().decode("utf-8")
-        print(f"❌ Google API Error Body: {error_body}")
-        return f"Google API側でエラーが発生しました: {error_body}"
+        print(f"❌ Brave Search API Error Body: {error_body}")
+        return f"Brave Search API側でエラーが発生しました: {error_body}"
     except Exception as e:
         return f"その他のエラー: {str(e)}"
 
 def run_tool(tool_name: str, tool_input: dict) -> str:
     """ツール名に応じて対応する関数を実行し、結果を JSON 文字列で返す"""
-    if tool_name == "google_custom_search":
-        result = google_custom_search(
+    if tool_name == "brave_search":
+        result = brave_search(
             query=tool_input["query"],
             num=tool_input.get("num", 5)
         )
@@ -101,7 +101,7 @@ def invoke_bedrock_with_tools(client, messages: list) -> str:
         "max_tokens": 4096,
         "system": (
             "あなたは最新情報を調べて回答できる親切なアシスタントです。"
-            "ユーザーの質問に答えるために必要であれば google_custom_search ツールを積極的に使用し、"
+            "ユーザーの質問に答えるために必要であれば brave_search ツールを積極的に使用し、"
             "検索結果を踏まえて日本語で回答してください。"
         ),
         "tools": TOOLS,
