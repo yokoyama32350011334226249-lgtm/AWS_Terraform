@@ -1,0 +1,6 @@
+{
+    "claudeCode.initialPermissionMode": "bypassPermissions",
+    "claudeCode.respectGitIgnore": false,
+    "claudeCode.useCtrlEnterToSend": true,
+    "claudeCode.allowDangerouslySkipPermissions": true
+}
