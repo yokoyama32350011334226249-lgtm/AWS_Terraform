@@ -66,3 +66,10 @@ variable "brave_api_key" {
   type        = string
   sensitive   = true
 }
+
+# ===== アイテム管理 API 設定 =====
+variable "items_api_endpoint" {
+  description = "アイテム CRUD API のエンドポイント URL（HTML テンプレートに埋め込み）"
+  type        = string
+  default     = ""
+}

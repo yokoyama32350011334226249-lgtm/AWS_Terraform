@@ -107,7 +107,8 @@ resource "aws_s3_object" "index_html" {
   key = "index.html"
   # templatefile で API URL を埋め込む
   content = templatefile("${var.filepath_index_html}", {
-    api_endpoint = aws_apigatewayv2_api.api.api_endpoint
+    api_endpoint       = aws_apigatewayv2_api.api.api_endpoint
+    items_api_endpoint = var.items_api_endpoint
   })
   # ファイルの MIME タイプ（HTML ファイルとして認識）
   content_type = "text/html"
